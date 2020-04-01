@@ -1,3 +1,7 @@
+## Modfications:
+Converted to .net Core Library (Target Frameworks: netcoreapp3.1; net4.7.2
+Added LoadTranslationFromResource
+
 About
 ===
 

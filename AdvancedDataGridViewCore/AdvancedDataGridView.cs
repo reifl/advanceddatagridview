@@ -11,8 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
-using System.Web.Script.Serialization;
+using System.Text.Json;
 using System.Windows.Forms;
 
 namespace Zuby.ADGV
@@ -227,7 +228,44 @@ namespace Zuby.ADGV
                 try
                 {
                     string jsontext = File.ReadAllText(filename);
-                    Dictionary<string, string> translations = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(jsontext);
+                    
+                    Dictionary<string, string> translations = JsonSerializer.Deserialize<Dictionary<string, string>>(jsontext);
+                    foreach (KeyValuePair<string, string> translation in translations)
+                    {
+                        if (!ret.ContainsKey(translation.Key) && Translations.ContainsKey(translation.Key))
+                            ret.Add(translation.Key, translation.Value);
+                    }
+                }
+                catch { }
+            }
+
+            //add default translations if not in files
+            foreach (KeyValuePair<string, string> translation in GetTranslations())
+            {
+                if (!ret.ContainsKey(translation.Key))
+                    ret.Add(translation.Key, translation.Value);
+            }
+
+            return ret;
+        }
+
+        public static IDictionary<string, string> LoadTranslationFromResource(string ResourceString, Assembly assembly)
+        {
+            string result = "";
+            using (Stream stream = assembly.GetManifestResourceStream(ResourceString))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                result = reader.ReadToEnd();
+            }
+            IDictionary<string, string> ret = new Dictionary<string, string>();
+
+            if (!String.IsNullOrEmpty(result))
+            {
+                //deserialize the file
+                try
+                {
+
+                    Dictionary<string, string> translations = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
                     foreach (KeyValuePair<string, string> translation in translations)
                     {
                         if (!ret.ContainsKey(translation.Key) && Translations.ContainsKey(translation.Key))
